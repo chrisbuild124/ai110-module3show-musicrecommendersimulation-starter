@@ -1,211 +1,158 @@
-# 🎵 Music Recommender Simulation
+# Music Recommender Simulation
 
 ## Project Summary
 
-In this project you will build and explain a small music recommender system.
-
-Your goal is to:
-
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
-
-Replace this paragraph with your own summary of what your version does.
+A content-based music recommender that scores songs against a user taste profile and returns the top 5 matches with explanations. Built to understand how platforms like Spotify decide what to play next — without the black box.
 
 ---
 
 ## How The System Works
 
-Explain your design in plain language.
+Each `Song` has 10 attributes (genre, mood, energy, tempo, valence, danceability, acousticness, etc.). A `UserProfile` stores four preferences: favorite genre, favorite mood, target energy, and whether they like acoustic sounds.
 
-Some prompts to answer:
+Every song gets scored using this formula:
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+```
+score = (0.40 × energy_score)
+      + (0.25 × mood_score)
+      + (0.20 × genre_score)
+      + (0.15 × acoustic_score)
+```
 
-You can include a simple diagram or bullet list if helpful.
+| Component | How it works |
+|-----------|--------------|
+| Energy | Gaussian decay — full credit when close to your target, drops off as it drifts |
+| Mood | Exact match = 1.0, no match = 0.0 |
+| Genre | Same as mood |
+| Acoustic | High acousticness is good if you like acoustic, bad if you don't |
+
+Songs are ranked by score and the top 5 are returned with a reason for each.
+
+```mermaid
+flowchart TD
+    A[User Profile] --> C
+    B[Song Catalog] --> C
+    C[Score Each Song] --> D[Sort Descending] --> E[Return Top 5]
+```
+
+Real platforms like Spotify also use collaborative filtering (what similar users listen to) and behavior signals like skips. This only does the content side.
 
 ---
 
 ## Getting Started
 
-### Setup
-
-1. Create a virtual environment (optional but recommended):
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate      # Mac or Linux
-   .venv\Scripts\activate         # Windows
-
-2. Install dependencies
-
 ```bash
 pip install -r requirements.txt
-```
-
-3. Run the app:
-
-```bash
 python -m src.main
 ```
 
-### Running Tests
-
-Run the starter tests with:
+Run tests:
 
 ```bash
 pytest
 ```
 
-You can add more tests in `tests/test_recommender.py`.
-
 ---
 
 ## Experiments You Tried
 
-Use this section to document the experiments you ran. For example:
+Tested three profiles: Late Night Focus (lofi/focused/low energy), High-Energy Pop (pop/happy/high energy), and Chill Acoustic (folk/chill/low energy).
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+The first two both scored 0.97 at #1 — but on totally different songs. When a song hits genre + mood + energy at the same time, it pulls way ahead of everything else. The Chill Acoustic profile was different because folk only appears once in the catalog, so the top result had no genre match at all. It just scored well on energy and acousticness.
+
+**Terminal output:**
+
+```
+Loaded 20 songs total.
+
+==================================================
+Profile: Late Night Focus
+==================================================
+  1. Focus Flow by LoRoom
+     Score: 0.97
+     Why: energy similarity: 1.00, mood match (+0.25), genre match (+0.20), acoustic fit: 0.78
+
+  2. Library Rain by Paper Lanterns
+     Score: 0.72
+     Why: energy similarity: 0.97, genre match (+0.20), acoustic fit: 0.86
+
+  3. Midnight Coding by LoRoom
+     Score: 0.70
+     Why: energy similarity: 1.00, genre match (+0.20), acoustic fit: 0.71
+
+  4. Coffee Shop Stories by Slow Stereo
+     Score: 0.53
+     Why: energy similarity: 0.99, acoustic fit: 0.89
+
+  5. Last Train Blues by Muddy Overcoat
+     Score: 0.53
+     Why: energy similarity: 1.00, acoustic fit: 0.85
+
+==================================================
+Profile: High-Energy Pop
+==================================================
+  1. Sunrise City by Neon Echo
+     Score: 0.97
+     Why: energy similarity: 0.99, mood match (+0.25), genre match (+0.20), acoustic fit: 0.82
+
+  2. Gym Hero by Max Pulse
+     Score: 0.71
+     Why: energy similarity: 0.92, genre match (+0.20), acoustic fit: 0.95
+
+  3. Rooftop Lights by Indigo Parade
+     Score: 0.71
+     Why: energy similarity: 0.90, mood match (+0.25), acoustic fit: 0.65
+
+  4. Crown the Block by Verse Theory
+     Score: 0.54
+     Why: energy similarity: 1.00, acoustic fit: 0.92
+
+  5. Storm Runner by Voltline
+     Score: 0.52
+     Why: energy similarity: 0.96, acoustic fit: 0.90
+
+==================================================
+Profile: Chill Acoustic
+==================================================
+  1. Spacewalk Thoughts by Orbit Bloom
+     Score: 0.79
+     Why: energy similarity: 1.00, mood match (+0.25), acoustic fit: 0.92
+
+  2. Library Rain by Paper Lanterns
+     Score: 0.77
+     Why: energy similarity: 0.97, mood match (+0.25), acoustic fit: 0.86
+
+  3. Dirt Road Gospel by The Hollow Pines
+     Score: 0.74
+     Why: energy similarity: 0.99, genre match (+0.20), acoustic fit: 0.94
+
+  4. Midnight Coding by LoRoom
+     Score: 0.69
+     Why: energy similarity: 0.84, mood match (+0.25), acoustic fit: 0.71
+
+  5. Cafe Ipanema by Sol Novo Trio
+     Score: 0.53
+     Why: energy similarity: 1.00, acoustic fit: 0.88
+```
+
+**Weight shift:** Doubled energy weight, halved genre — rankings barely changed. Energy was already doing most of the work because the Gaussian decay never hits zero.
+
+**Feature removal:** Removing mood caused two songs to swap in the Late Night Focus list. Library Rain jumped above Midnight Coding because their energy scores were nearly identical and mood had been the tiebreaker.
 
 ---
 
 ## Limitations and Risks
 
-Summarize some limitations of your recommender.
-
-Examples:
-
-- It only works on a tiny catalog
-- It does not understand lyrics or language
-- It might over favor one genre or mood
-
-You will go deeper on this in your model card.
+- Only 20 songs — rare genres get almost no real options
+- Genre and mood are binary, so "lofi hip-hop" gets zero credit for a "lofi" preference
+- Energy scores never bottom out, so a bad mood/genre match can still rank decently
+- No memory — same profile always gives same results
+- Pop is overrepresented so pop users get more variety by default
 
 ---
 
 ## Reflection
 
-Read and complete `model_card.md`:
-
 [**Model Card**](model_card.md)
 
-Write 1 to 2 paragraphs here about what you learned:
-
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
-
-
----
-
-## 7. `model_card_template.md`
-
-Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}  
-
-```markdown
-# 🎧 Model Card - Music Recommender Simulation
-
-## 1. Model Name
-
-Give your recommender a name, for example:
-
-> VibeFinder 1.0
-
----
-
-## 2. Intended Use
-
-- What is this system trying to do
-- Who is it for
-
-Example:
-
-> This model suggests 3 to 5 songs from a small catalog based on a user's preferred genre, mood, and energy level. It is for classroom exploration only, not for real users.
-
----
-
-## 3. How It Works (Short Explanation)
-
-Describe your scoring logic in plain language.
-
-- What features of each song does it consider
-- What information about the user does it use
-- How does it turn those into a number
-
-Try to avoid code in this section, treat it like an explanation to a non programmer.
-
----
-
-## 4. Data
-
-Describe your dataset.
-
-- How many songs are in `data/songs.csv`
-- Did you add or remove any songs
-- What kinds of genres or moods are represented
-- Whose taste does this data mostly reflect
-
----
-
-## 5. Strengths
-
-Where does your recommender work well
-
-You can think about:
-- Situations where the top results "felt right"
-- Particular user profiles it served well
-- Simplicity or transparency benefits
-
----
-
-## 6. Limitations and Bias
-
-Where does your recommender struggle
-
-Some prompts:
-- Does it ignore some genres or moods
-- Does it treat all users as if they have the same taste shape
-- Is it biased toward high energy or one genre by default
-- How could this be unfair if used in a real product
-
----
-
-## 7. Evaluation
-
-How did you check your system
-
-Examples:
-- You tried multiple user profiles and wrote down whether the results matched your expectations
-- You compared your simulation to what a real app like Spotify or YouTube tends to recommend
-- You wrote tests for your scoring logic
-
-You do not need a numeric metric, but if you used one, explain what it measures.
-
----
-
-## 8. Future Work
-
-If you had more time, how would you improve this recommender
-
-Examples:
-
-- Add support for multiple users and "group vibe" recommendations
-- Balance diversity of songs instead of always picking the closest match
-- Use more features, like tempo ranges or lyric themes
-
----
-
-## 9. Personal Reflection
-
-A few sentences about what you learned:
-
-- What surprised you about how your system behaved
-- How did building this change how you think about real music recommenders
-- Where do you think human judgment still matters, even if the model seems "smart"
-
+The weights I chose aren't facts — they're a guess at what matters most. If that guess is wrong, the system confidently gives bad recommendations with no way to know. The filter bubble thing was the most surprising part: nobody decided to favor pop, it just happened because pop dominates the dataset. That feels like it would be a much bigger problem in a real system where you can't easily see the imbalance.

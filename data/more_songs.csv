@@ -1,0 +1,11 @@
+id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
+11,Crown the Block,Verse Theory,hip-hop,confident,0.86,96,0.72,0.91,0.08
+12,Cello in the Rain,Aurelia Strings,classical,peaceful,0.21,58,0.78,0.24,0.97
+13,Bleed the Circuit,Iron Fault,metal,angry,0.97,178,0.28,0.55,0.04
+14,Silk and Smoke,Deja Blue,r&b,romantic,0.55,88,0.83,0.74,0.31
+15,Dirt Road Gospel,The Hollow Pines,folk,nostalgic,0.33,104,0.67,0.48,0.94
+16,Harbor Sway,Coastal Riddim,reggae,laid-back,0.47,82,0.88,0.69,0.62
+17,Drop the Horizon,Ultrawave,edm,euphoric,0.95,138,0.90,0.96,0.03
+18,Last Train Blues,Muddy Overcoat,blues,melancholic,0.38,76,0.31,0.43,0.85
+19,Porch Light On,June Cassidy,country,heartfelt,0.52,100,0.74,0.61,0.78
+20,Cafe Ipanema,Sol Novo Trio,bossa nova,dreamy,0.30,112,0.85,0.57,0.88
